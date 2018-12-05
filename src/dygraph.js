@@ -1604,6 +1604,7 @@ Dygraph.prototype.mouseMove_ = function(event) {
   var highlightSeriesOpts = this.getOption("highlightSeriesOpts");
   var selectionChanged = false;
   var callback = this.getFunctionOption("highlightCallback");
+  var idx = this.findClosestRow(canvasx);
   if (highlightSeriesOpts && !this.isSeriesLocked()) {
     var closest;
     if (this.getBooleanOption("stackedGraph")) {
@@ -1613,7 +1614,6 @@ Dygraph.prototype.mouseMove_ = function(event) {
     }
     selectionChanged = this.setSelection(closest.row, closest.seriesName);
   } else {
-    var idx = this.findClosestRow(canvasx);
     if (callback) {
       selectionChanged = true;
     } else {
@@ -1625,7 +1625,7 @@ Dygraph.prototype.mouseMove_ = function(event) {
     callback.call(this, event,
         this.lastx_,
         this.selPoints_,
-        this.lastRow_,
+        idx,
         this.highlightSet_);
   }
 };

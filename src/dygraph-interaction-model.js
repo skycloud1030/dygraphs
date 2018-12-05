@@ -461,10 +461,15 @@ DygraphInteraction.startTouch = function(event, g, context) {
       y: (initialAngle > 45/2)
     };
   }
-  const idx = g.findClosestRow(touches[0].pageX - 30);
-  g.setSelection(idx);
-  const callback = g.getFunctionOption("highlightCallback");
-  callback(null, null, null, idx);
+
+  // Highlight idx
+  // const idx = g.findClosestRow(touches[0].pageX - 30);
+  // const callback = g.getFunctionOption("highlightCallback");
+  // if (callback) {
+  //   callback(null, null, null, idx);
+  // } else {
+  //   g.setSelection(idx);
+  // }
   // save the full x & y ranges.
   context.initialRange = {
     x: g.xAxisRange(),
@@ -478,7 +483,6 @@ DygraphInteraction.startTouch = function(event, g, context) {
 DygraphInteraction.moveTouch = function(event, g, context) {
   // If the tap moves, then it's definitely not part of a double-tap.
   context.startTimeForDoubleTapMs = null;
-
   var i, touches = [];
   for (i = 0; i < event.touches.length; i++) {
     var t = event.touches[i];
@@ -555,10 +559,7 @@ DygraphInteraction.moveTouch = function(event, g, context) {
   //     }
   //   }
   // }
-
   g.drawGraph_(false);
-  g.setSelection(g.findClosestRow(c_now.pageX - 30));
-
   // We only call zoomCallback on zooms, not pans, to mirror desktop behavior.
   if (didZoom && touches.length > 1 && g.getFunctionOption('zoomCallback')) {
     var viewWindow = g.xAxisRange();
