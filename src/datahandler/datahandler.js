@@ -1,3 +1,5 @@
+import _ from "lodash";
+import { List } from "immutable";
 /**
  * @license
  * Copyright 2013 David Eberlein (david.eberlein@ch.sauter-bc.com)
@@ -41,7 +43,7 @@
 /*global Dygraph:false */
 /*global DygraphLayout:false */
 
-"use strict";
+("use strict");
 
 /**
  *
@@ -50,8 +52,7 @@
  * Initially the unified data is created by the extractSeries method
  * @constructor
  */
-var DygraphDataHandler = function () {
-};
+var DygraphDataHandler = function() {};
 
 var handler = DygraphDataHandler;
 
@@ -91,8 +92,7 @@ handler.EXTRAS = 2;
  * @return {Array.<[!number,?number,?]>} The series in the unified data format
  *     where series[i] = [x,y,{extras}].
  */
-handler.prototype.extractSeries = function(rawData, seriesIndex, options) {
-};
+handler.prototype.extractSeries = function(rawData, seriesIndex, options) {};
 
 /**
  * Converts a series to a Point array.  The resulting point array must be
@@ -112,25 +112,41 @@ handler.prototype.seriesToPoints = function(series, setName, boundaryIdStart) {
   // the
   // points and drawing the lines. The brunt of the cost comes from allocating
   // the |point| structures.
-  var points = [];
-  for ( var i = 0; i < series.length; ++i) {
-    var item = series[i];
+  const immutable_series = List(series);
+  var rollPeriodX;
+  switch (true) {
+    case immutable_series.size > 36000:
+      rollPeriodX = 60;
+      break;
+    case immutable_series.size > 1800:
+      rollPeriodX = 10;
+      break;
+    default:
+      rollPeriodX = 1;
+      break;
+  }
+  var points = List([]);
+  for (var i = 0; i < immutable_series.size; i += rollPeriodX) {
+    var item = immutable_series.get(i) || {};
     var yraw = item[1];
+    if (rollPeriodX > 1) {
+      const slice = immutable_series.slice(i, i + rollPeriodX).map(item => item[1]);
+      const sum = slice.reduce((r, n) => r + n, 1);
+      yraw = sum / slice.size;
+      yraw = _.round(yraw, 2);
+    }
     var yval = yraw === null ? null : handler.parseFloat(yraw);
     var point = {
-      x : NaN,
-      y : NaN,
-      xval : handler.parseFloat(item[0]),
-      yval : yval,
-      name : setName, // TODO(danvk): is this really necessary?
-      idx : i + boundaryIdStart,
-      canvasx: NaN, // add these so we do not alter the structure later, which slows Chrome
-      canvasy: NaN,
+      x: NaN,
+      y: NaN,
+      xval: handler.parseFloat(item[0]),
+      yval: yval,
+      name: setName, // TODO(danvk): is this really necessary?
+      idx: i + boundaryIdStart
     };
-    points.push(point);
+    points = points.push(point);
   }
-  this.onPointsCreated_(series, points);
-  return points;
+  return points.toArray();
 };
 
 /**
@@ -146,8 +162,7 @@ handler.prototype.seriesToPoints = function(series, setName, boundaryIdStart) {
  *     to the plotter.
  * @protected
  */
-handler.prototype.onPointsCreated_ = function(series, points) {
-};
+handler.prototype.onPointsCreated_ = function(series, points) {};
 
 /**
  * Calculates the rolling average of a data set.
@@ -158,8 +173,7 @@ handler.prototype.onPointsCreated_ = function(series, points) {
  * @param {!DygraphOptions} options The dygraph options.
  * @return {!Array.<[!number,?number,?]>} the rolled series.
  */
-handler.prototype.rollingAverage = function(series, rollPeriod, options) {
-};
+handler.prototype.rollingAverage = function(series, rollPeriod, options) {};
 
 /**
  * Computes the range of the data series (including confidence intervals).
@@ -172,8 +186,7 @@ handler.prototype.rollingAverage = function(series, rollPeriod, options) {
  * @return {Array.<number>} The low and high extremes of the series in the
  *     given window with the format: [low, high].
  */
-handler.prototype.getExtremeYValues = function(series, dateWindow, options) {
-};
+handler.prototype.getExtremeYValues = function(series, dateWindow, options) {};
 
 /**
  * Callback called for each series after the layouting data has been
@@ -185,8 +198,7 @@ handler.prototype.getExtremeYValues = function(series, dateWindow, options) {
  * @param {!Object} axis The axis on which the series will be plotted.
  * @param {!boolean} logscale Weather or not to use a logscale.
  */
-handler.prototype.onLineEvaluated = function(points, axis, logscale) {
-};
+handler.prototype.onLineEvaluated = function(points, axis, logscale) {};
 
 /**
  * Optimized replacement for parseFloat, which was way too slow when almost

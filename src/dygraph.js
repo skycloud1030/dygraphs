@@ -1282,12 +1282,12 @@ Dygraph.prototype.doZoomXDates_ = function(minDate, maxDate) {
   // between values, it can jerk around.)
   var old_window = this.xAxisRange();
   var new_window = [minDate, maxDate];
-  const zoomCallback = this.getFunctionOption('zoomCallback');
-  this.doAnimatedZoom(old_window, new_window, null, null, () => {
-    if (zoomCallback) {
-      zoomCallback.call(this, minDate, maxDate, this.yAxisRanges());
-    }
-  });
+  const zoomCallback = this.getFunctionOption("zoomCallback");
+  if (zoomCallback) {
+    zoomCallback.call(this, minDate, maxDate, this.yAxisRanges());
+  } else {
+    this.doAnimatedZoom(old_window, new_window, null, null, () => {});
+  }
 };
 
 /**
@@ -1603,6 +1603,7 @@ Dygraph.prototype.mouseMove_ = function(event) {
 
   var highlightSeriesOpts = this.getOption("highlightSeriesOpts");
   var selectionChanged = false;
+  var callback = this.getFunctionOption("highlightCallback");
   if (highlightSeriesOpts && !this.isSeriesLocked()) {
     var closest;
     if (this.getBooleanOption("stackedGraph")) {
@@ -1613,10 +1614,13 @@ Dygraph.prototype.mouseMove_ = function(event) {
     selectionChanged = this.setSelection(closest.row, closest.seriesName);
   } else {
     var idx = this.findClosestRow(canvasx);
-    selectionChanged = this.setSelection(idx);
+    if (callback) {
+      selectionChanged = true;
+    } else {
+      selectionChanged = this.setSelection(idx);
+    }
   }
 
-  var callback = this.getFunctionOption("highlightCallback");
   if (callback && selectionChanged) {
     callback.call(this, event,
         this.lastx_,
@@ -1742,22 +1746,24 @@ Dygraph.prototype.updateSelection_ = function(opt_animFraction) {
     // Draw colored circles over the center of each selected point
     var canvasx = this.selPoints_[0].canvasx;
     ctx.save();
-    for (i = 0; i < this.selPoints_.length; i++) {
-      var pt = this.selPoints_[i];
-      if (isNaN(pt.canvasy)) continue;
+    ctx.fillStyle = "rgba(128,128,128,0.8)";
+    ctx.fillRect(canvasx, 0, 3, this.height_);
+    // for (i = 0; i < this.selPoints_.length; i++) {
+    //   var pt = this.selPoints_[i];
+    //   if (isNaN(pt.canvasy)) continue;
 
-      var circleSize = this.getNumericOption('highlightCircleSize', pt.name);
-      var callback = this.getFunctionOption("drawHighlightPointCallback", pt.name);
-      var color = this.plotter_.colors[pt.name];
-      if (!callback) {
-        callback = utils.Circles.DEFAULT;
-      }
-      ctx.lineWidth = this.getNumericOption('strokeWidth', pt.name);
-      ctx.strokeStyle = color;
-      ctx.fillStyle = color;
-      callback.call(this, this, pt.name, ctx, canvasx, pt.canvasy,
-          color, circleSize, pt.idx);
-    }
+    //   var circleSize = this.getNumericOption('highlightCircleSize', pt.name);
+    //   var callback = this.getFunctionOption("drawHighlightPointCallback", pt.name);
+    //   var color = this.plotter_.colors[pt.name];
+    //   if (!callback) {
+    //     callback = utils.Circles.DEFAULT;
+    //   }
+    //   ctx.lineWidth = this.getNumericOption('strokeWidth', pt.name);
+    //   ctx.strokeStyle = color;
+    //   ctx.fillStyle = color;
+    //   callback.call(this, this, pt.name, ctx, canvasx, pt.canvasy,
+    //       color, circleSize, pt.idx);
+    // }
     ctx.restore();
 
     this.previousVerticalX_ = canvasx;
@@ -1843,10 +1849,10 @@ Dygraph.prototype.setSelection = function(row, opt_seriesName, opt_locked) {
 Dygraph.prototype.mouseOut_ = function(event) {
   if (this.getFunctionOption("unhighlightCallback")) {
     this.getFunctionOption("unhighlightCallback").call(this, event);
-  }
-
-  if (this.getBooleanOption("hideOverlayOnMouseOut") && !this.lockedSet_) {
-    this.clearSelection();
+  } else {
+    if (this.getBooleanOption("hideOverlayOnMouseOut") && !this.lockedSet_) {
+      this.clearSelection();
+    }
   }
 };
 
@@ -2451,8 +2457,8 @@ Dygraph.prototype.computeYAxisRanges_ = function(extremes) {
     //   always add the specified Y padding.
     //
     ypadCompat = true;
-    ypad = 0.1; // add 10%
-    const yRangePad = this.getNumericOption('yRangePad');
+    ypad = 0.2; // add 20%
+    const yRangePad = this.getNumericOption("yRangePad");
     if (yRangePad !== null) {
       ypadCompat = false;
       // Convert pixel padding to ratio

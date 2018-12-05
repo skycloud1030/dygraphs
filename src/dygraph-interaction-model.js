@@ -461,7 +461,10 @@ DygraphInteraction.startTouch = function(event, g, context) {
       y: (initialAngle > 45/2)
     };
   }
-
+  const idx = g.findClosestRow(touches[0].pageX - 30);
+  g.setSelection(idx);
+  const callback = g.getFunctionOption("highlightCallback");
+  callback(null, null, null, idx);
   // save the full x & y ranges.
   context.initialRange = {
     x: g.xAxisRange(),
@@ -537,23 +540,24 @@ DygraphInteraction.moveTouch = function(event, g, context) {
     didZoom = true;
   }
 
-  if (context.touchDirections.y) {
-    for (i = 0; i < 1  /*g.axes_.length*/; i++) {
-      var axis = g.axes_[i];
-      var logscale = g.attributes_.getForAxis("logscale", i);
-      if (logscale) {
-        // TODO(danvk): implement
-      } else {
-        axis.valueRange = [
-          c_init.dataY - swipe.dataY + (context.initialRange.y[0] - c_init.dataY) / yScale,
-          c_init.dataY - swipe.dataY + (context.initialRange.y[1] - c_init.dataY) / yScale
-        ];
-        didZoom = true;
-      }
-    }
-  }
+  // if (context.touchDirections.y) {
+  //   for (i = 0; i < 1  /*g.axes_.length*/; i++) {
+  //     var axis = g.axes_[i];
+  //     var logscale = g.attributes_.getForAxis("logscale", i);
+  //     if (logscale) {
+  //       // TODO(danvk): implement
+  //     } else {
+  //       axis.valueRange = [
+  //         c_init.dataY - swipe.dataY + (context.initialRange.y[0] - c_init.dataY) / yScale,
+  //         c_init.dataY - swipe.dataY + (context.initialRange.y[1] - c_init.dataY) / yScale
+  //       ];
+  //       didZoom = true;
+  //     }
+  //   }
+  // }
 
   g.drawGraph_(false);
+  g.setSelection(g.findClosestRow(c_now.pageX - 30));
 
   // We only call zoomCallback on zooms, not pans, to mirror desktop behavior.
   if (didZoom && touches.length > 1 && g.getFunctionOption('zoomCallback')) {
