@@ -131,7 +131,7 @@ handler.prototype.seriesToPoints = function(series, setName, boundaryIdStart) {
     var yraw = item[1];
     if (rollPeriodX > 1) {
       const slice = immutable_series.slice(i, i + rollPeriodX).map(item => item[1]);
-      const sum = slice.reduce((r, n) => r + n, 1);
+      const sum = slice.reduce((r, n) => r + n, 0);
       yraw = sum / slice.size;
       yraw = _.round(yraw, 2);
     }
